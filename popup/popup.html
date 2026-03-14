@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domain Blocker</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+  <header>
+    <span class="logo">🚫</span>
+    <span class="title">Domain Blocker</span>
+    <label class="toggle-label" id="globalToggleWrap" title="Enable / disable blocking">
+      <input type="checkbox" id="globalToggle" checked>
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+    </label>
+  </header>
+
+  <div id="status">
+    <div id="activeList">
+      <!-- injected by JS -->
+    </div>
+    <p class="no-blocks hidden" id="noBlocks">No active blocks right now.</p>
+  </div>
+
+  <footer>
+    <button id="openSettings" class="btn">⚙ Open Settings</button>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

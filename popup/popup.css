@@ -1,0 +1,122 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --accent:  #e74c3c;
+  --bg:      #f4f4f6;
+  --surface: #ffffff;
+  --border:  #e0e0e6;
+  --text:    #1a1a2e;
+  --muted:   #6b7080;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text);
+  width: 280px;
+  min-height: 120px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo  { font-size: 1.1rem; }
+.title { font-weight: 700; font-size: 0.95rem; flex: 1; }
+
+/* Toggle */
+.toggle-label { display: flex; align-items: center; cursor: pointer; }
+.toggle-label input { display: none; }
+.toggle-track {
+  width: 36px; height: 20px;
+  background: #ccc;
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.2s;
+}
+.toggle-thumb {
+  width: 14px; height: 14px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px; left: 3px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-label input:checked ~ .toggle-track { background: #27ae60; }
+.toggle-label input:checked ~ .toggle-track .toggle-thumb { transform: translateX(16px); }
+
+/* Status area */
+#status { padding: 0.75rem 1rem; }
+
+.no-blocks {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  padding: 0.25rem 0;
+}
+
+.block-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.block-item:last-child { border-bottom: none; }
+
+.block-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.block-info { flex: 1; min-width: 0; }
+.block-name {
+  font-weight: 600;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.block-sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* Disabled overlay hint */
+.disabled-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+  padding: 0.5rem 0;
+  font-style: italic;
+}
+
+footer {
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.btn {
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-align: center;
+  transition: background 0.15s;
+}
+.btn:hover { background: var(--bg); }
+
+.hidden { display: none !important; }
