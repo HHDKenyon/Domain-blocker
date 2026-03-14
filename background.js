@@ -112,6 +112,35 @@ function matchHostname(reqHostname) {
   return matches;
 }
 
+/**
+ * Returns the configured domain string from activelyBlocked that matches
+ * reqHostname (exact or as a parent domain), or null if not blocked.
+ * e.g. "www.facebook.com" returns "facebook.com" if that's in activelyBlocked.
+ */
+function findBlockedDomain(reqHostname) {
+  const h = normaliseHostname(reqHostname);
+  // Walk from most-specific to least-specific suffix
+  const parts = h.split(".");
+  for (let i = 0; i < parts.length - 1; i++) {
+    const candidate = parts.slice(i).join(".");
+    if (activelyBlocked.has(candidate)) return candidate;
+  }
+  return null;
+}
+
+/**
+ * Returns the timedActive entry for reqHostname (exact or suffix match), or null.
+ */
+function findTimedDomain(reqHostname) {
+  const h = normaliseHostname(reqHostname);
+  const parts = h.split(".");
+  for (let i = 0; i < parts.length - 1; i++) {
+    const candidate = parts.slice(i).join(".");
+    if (timedActive.has(candidate)) return { configuredDomain: candidate, ...timedActive.get(candidate) };
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // State builders
 // ---------------------------------------------------------------------------
@@ -201,10 +230,8 @@ function onBeforeRequest(details) {
   }
   if (!hostname) return {};
 
-  const h = normaliseHostname(hostname);
-
-  // Fast path: check the already-computed blocked set
-  if (activelyBlocked.has(h)) {
+  // Suffix-aware blocked check (e.g. "facebook.com" rule matches "www.facebook.com")
+  if (findBlockedDomain(hostname)) {
     // Find group name and reason for the blocked page
     const entries = matchHostname(hostname);
     const entry   = entries[0];
@@ -289,14 +316,14 @@ async function evaluateTabForTracking(tabId, url) {
   }
   let hostname;
   try { hostname = new URL(url).hostname; } catch (_) { stopTracking(); return; }
-  const h = normaliseHostname(hostname);
-  const timedEntry = timedActive.get(h);
+  const timedEntry = findTimedDomain(hostname);
   if (timedEntry) {
-    if (tracking.tabId === tabId && tracking.hostname === h) {
+    const configuredDomain = timedEntry.configuredDomain;
+    if (tracking.tabId === tabId && tracking.hostname === configuredDomain) {
       // Already tracking this — resume if paused
       if (!tracking.startedAt) resumeTracking();
     } else {
-      startTracking(tabId, h, timedEntry.windowKey);
+      startTracking(tabId, configuredDomain, timedEntry.windowKey);
     }
   } else {
     if (tracking.tabId === tabId) stopTracking();
