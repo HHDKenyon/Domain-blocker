@@ -1,5 +1,7 @@
 "use strict";
 
+importScripts("vendor/browser-polyfill.js", "shared/utils.js");
+
 // ---------------------------------------------------------------------------
 // In-memory state (rebuilt from storage on startup / storage change)
 // ---------------------------------------------------------------------------
@@ -200,6 +202,9 @@ function rebuildBlockingState() {
   for (const domain of activelyBlocked) {
     timedActive.delete(domain);
   }
+
+  // Sync declarativeNetRequest rules to match current blocking state.
+  syncDeclarativeRules().catch(console.error);
 }
 
 async function loadAndRebuild() {
@@ -212,45 +217,49 @@ async function loadAndRebuild() {
 }
 
 // ---------------------------------------------------------------------------
-// webRequest blocking — hot path
+// declarativeNetRequest — sync blocking rules
 // ---------------------------------------------------------------------------
 
-function onBeforeRequest(details) {
-  if (!settings.extensionEnabled) return {};
+async function syncDeclarativeRules() {
+  // Remove all existing dynamic rules first
+  const existing = await browser.declarativeNetRequest.getDynamicRules();
+  const removeRuleIds = existing.map(r => r.id);
 
-  let hostname;
-  try {
-    hostname = new URL(details.url).hostname;
-  } catch (e) {
-    console.error("Domain Blocker: failed to parse URL:", details.url, e);
-    return {};
-  }
-  if (!hostname) return {};
+  const addRules = [];
+  let ruleId = 1;
 
-  // Suffix-aware blocked check (e.g. "facebook.com" rule matches "www.facebook.com")
-  if (findBlockedDomain(hostname)) {
-    // Find group name and reason for the blocked page
-    const entries = matchHostname(hostname);
-    const entry   = entries[0];
-    const groupName = entry ? entry.group.name : "";
+  if (settings.extensionEnabled) {
     const now = new Date();
-    let reason = "scheduled";
+    for (const domain of activelyBlocked) {
+      const entries = matchHostname(domain);
+      const entry   = entries[0];
+      const groupName = entry ? entry.group.name : "";
+      let reason = "scheduled";
 
-    // Determine if it's time-limit vs scheduled
-    if (entry) {
-      const wk = getActiveWindowKey(entry.schedule, now);
-      if (wk && entry.schedule.blockType === "timed") reason = "time-limit";
+      if (entry) {
+        const wk = getActiveWindowKey(entry.schedule, now);
+        if (wk && entry.schedule.blockType === "timed") reason = "time-limit";
+      }
+
+      const params = new URLSearchParams({ domain, group: groupName, reason });
+      addRules.push({
+        id: ruleId++,
+        priority: 1,
+        action: {
+          type: "redirect",
+          redirect: {
+            extensionPath: "/blocked/blocked.html?" + params.toString(),
+          },
+        },
+        condition: {
+          requestDomains: [domain],
+          resourceTypes: ["main_frame"],
+        },
+      });
     }
-
-    const params = new URLSearchParams({
-      domain: hostname,
-      group:  groupName,
-      reason,
-    });
-    return { redirectUrl: browser.runtime.getURL("blocked/blocked.html") + "?" + params.toString() };
   }
 
-  return {};
+  await browser.declarativeNetRequest.updateDynamicRules({ addRules, removeRuleIds });
 }
 
 // ---------------------------------------------------------------------------
