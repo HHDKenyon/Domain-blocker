@@ -9,7 +9,8 @@ async function init() {
   let status;
   try {
     status = await browser.runtime.sendMessage({ type: "getStatus" });
-  } catch (_) {
+  } catch (e) {
+    console.error("Domain Blocker: failed to get status:", e);
     activeList.innerHTML = '<p class="no-blocks">Extension not responding.</p>';
     return;
   }
@@ -61,12 +62,5 @@ async function init() {
   });
 }
 
-function escHtml(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
 
 document.addEventListener("DOMContentLoaded", init);

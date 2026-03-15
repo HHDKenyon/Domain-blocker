@@ -9,5 +9,6 @@ module.exports = {
     '.web-ext-config.js',
     'package*.json',
     '.gitignore',
+    'README.md',
   ],
 };

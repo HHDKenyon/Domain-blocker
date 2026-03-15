@@ -35,10 +35,6 @@ let tracking = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function generateId() {
-  return crypto.randomUUID();
-}
-
 /**
  * Given a schedule and a Date, returns the window key string if the window
  * is currently active, or null if not.
@@ -225,7 +221,8 @@ function onBeforeRequest(details) {
   let hostname;
   try {
     hostname = new URL(details.url).hostname;
-  } catch (_) {
+  } catch (e) {
+    console.error("Domain Blocker: failed to parse URL:", details.url, e);
     return {};
   }
   if (!hostname) return {};
@@ -315,7 +312,7 @@ async function evaluateTabForTracking(tabId, url) {
     return;
   }
   let hostname;
-  try { hostname = new URL(url).hostname; } catch (_) { stopTracking(); return; }
+  try { hostname = new URL(url).hostname; } catch (e) { console.error("Domain Blocker: failed to parse tab URL:", url, e); stopTracking(); return; }
   const timedEntry = findTimedDomain(hostname);
   if (timedEntry) {
     const configuredDomain = timedEntry.configuredDomain;
@@ -428,7 +425,7 @@ browser.tabs.onActivated.addListener(async ({ tabId }) => {
   try {
     const tab = await browser.tabs.get(tabId);
     await evaluateTabForTracking(tabId, tab.url);
-  } catch (_) {}
+  } catch (e) { console.error("Domain Blocker: error in onActivated handler:", e); }
 });
 
 browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {

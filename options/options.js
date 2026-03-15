@@ -40,10 +40,6 @@ async function saveSettings() {
 // Utilities
 // ---------------------------------------------------------------------------
 
-function generateId() {
-  return crypto.randomUUID();
-}
-
 /**
  * Validates and normalises a hostname string.
  * Returns the cleaned hostname, or null if invalid.
@@ -221,6 +217,7 @@ function appendScheduleRow(sched) {
 function collectScheduleRows() {
   const rows = document.querySelectorAll("#scheduleList .schedule-row");
   const schedules = [];
+  const errors = [];
   for (const row of rows) {
     const days = [];
     row.querySelectorAll(".day-pill.active").forEach(p => days.push(parseInt(p.dataset.day, 10)));
@@ -229,6 +226,16 @@ function collectScheduleRows() {
     const endTime   = row.querySelector(".time-end").value;
     const blockType = row.querySelector(".radio-timed").checked ? "timed" : "full";
     const timeLimit = parseInt(row.querySelector(".time-limit-input").value, 10) || 30;
+
+    if (days.length === 0) {
+      errors.push("A schedule has no days selected.");
+    }
+    if (!startTime || !endTime) {
+      errors.push("A schedule is missing start or end time.");
+    }
+    if (startTime && endTime && startTime === endTime) {
+      errors.push("A schedule has identical start and end times.");
+    }
 
     schedules.push({
       id: row.dataset.id || generateId(),
@@ -239,7 +246,7 @@ function collectScheduleRows() {
       timeLimit,
     });
   }
-  return schedules;
+  return { schedules, errors };
 }
 
 // ---------------------------------------------------------------------------
@@ -272,7 +279,12 @@ function saveGroup() {
     errEl.classList.add("hidden");
   }
 
-  const schedules = collectScheduleRows();
+  const { schedules, errors: scheduleErrors } = collectScheduleRows();
+  if (scheduleErrors.length) {
+    errEl.textContent = scheduleErrors.join(" ");
+    errEl.classList.remove("hidden");
+    return;
+  }
 
   if (editingGroup) {
     // Update in place
@@ -320,14 +332,6 @@ async function handleGlobalToggle(checked) {
   settings.extensionEnabled = checked;
   document.getElementById("globalToggleText").textContent = checked ? "Enabled" : "Disabled";
   await saveSettings();
-}
-
-// ---------------------------------------------------------------------------
-// Escape HTML
-// ---------------------------------------------------------------------------
-
-function escHtml(s) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 // ---------------------------------------------------------------------------
