@@ -1,0 +1,16 @@
+{
+  "name": "domain-blocker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "generate-icons": "node scripts/generate-icons.js",
+    "lint": "web-ext lint",
+    "build": "web-ext build",
+    "sign:firefox": "web-ext sign --channel=unlisted"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.0",
+    "web-ext": "^8.3.0",
+    "webextension-polyfill": "^0.12.0"
+  }
+}
