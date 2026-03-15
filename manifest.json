@@ -17,7 +17,7 @@
   ],
 
   "background": {
-    "scripts": ["vendor/browser-polyfill.js", "background.js"],
+    "scripts": ["vendor/browser-polyfill.js", "shared/utils.js", "background.js"],
     "persistent": true
   },
 
